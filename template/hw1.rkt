@@ -31,19 +31,36 @@
 ; -----------------------------------------------------------------------------
 
 ;;; Takes an image and converts it into a list of lists of grayscale values.
-(define (img->mat image)
-  ; Hints: Use the functions image-width and image->color-list.
-  '((0 0 0)
-    (0 0 0)))
+(define (list-split lst widht [answer '()])
+  (if (empty? lst)
+    (reverse answer)
+    
+    (list-split (drop lst widht) widht (cons (take lst widht) answer)))
+  )
 
+(define (img->mat image)
+  (let ([widht (image-width image)]
+        [color (image->color-list image)])
+        (list-split (map color->gray color) widht)))
 ;;; First, takes a specification consisting of block-width, block-height and
 ;;; a character-set; then returns a new function which can convert any image
 ;;; into a 2D ascii-art string.
 (define (ascii-art block-width block-height charset)
   (define (convert image)
-    ; Hint: Implement functions img->mat, mat-scale and mat->ascii;
-    ; this inner function will then simply compose them.
-    "I am an image!")
+  (let* ([matice (img->mat image)]
+         [len (string-length charset)]
+         ;; 1. KROK: Převedeme čísla na znaky (2D seznam)
+         [matice-znaku 
+          (map (lambda (radek)
+                 (map (lambda (pixel) 
+                        (string-ref charset (index-formula len pixel)))
+                      radek))
+               matice)]
+         ;; 2. KROK: Každý řádek (seznam znaků) změníme na řetězec
+         [seznam-radku (map list->string matice-znaku)])
+    
+    ;; 3. KROK: Spojíme řádky do jednoho textu s novými řádky
+    (string-join seznam-radku "\n")))
   convert)
 
 ; Hint: If You decide to modify the list-split function from lab2,

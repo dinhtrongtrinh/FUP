@@ -1,0 +1,61 @@
+pair functions:
+
+    cons - spoji 2 paramtry do jednoho paru
+        - Vezme prvni prvek a nacpeho na zacatku druheho prvku 
+        pr: (cons A B) => (A . B)
+            (cons 3 '()) => (3)
+            (cons '(1 2 3) '(4 5 6)) => ((1 2 3) 4 5 6)     #tady si muzeme vsimnout, ze se prvni prvek se dalo nazacatek druheo prvku
+
+    car - vrati prvni prvek v paru/seznamu
+        pr: (define muj-seznam '(1 2 3))
+            (car muj-seznam) ; => 1         #(První prvek)
+
+    cdr - vrati zbytky prvku seznamu
+        pr: (define muj-seznam '(1 2 3))
+            (cdr muj-seznam) ; => 1(2 3)       #(Všechno ostatní kromě prvního prvku)
+
+list functions:
+    - list se ze zacatku znaci apostrofem
+
+    list - proste z toho udela list (LMAO :3)
+        pr: (list 1 2 3 4) => '(1 2 3 4)
+            (list 1 2 (+ 2 1) 4) => '(1 2 3 4)
+    
+    quote - udela z toho list, ale zustaji pouvodni data zachovany a neevaluje se
+        pr: (quote (1 2 (+ 2 1) 4)) => '(1 2 (+ 2 1) 4)
+
+    append - spoji seznamy
+        pr : (append '(1) '(2) '(3 4)) => '(1 2 3 4)
+
+    reverse - otoci seznam
+        pr : (reverse '(1 2 3 4)) => '(4 3 2 1)
+
+Equality functions:
+    pokud je na konce fuknce '?', tak vime, ze vracime True/False   
+
+    equal? - bere prvni parametr a koukne se, jestli je stejny jako ten druhy
+        pr: (equal? '(1 2 3) (cons 1 (cons 2 (cons 3 '())))) => #t
+            (equal? "foobar" (string-append "foo" "bar")) => #t
+            (equal? '() null) => #t
+            (equal? 42 (* 6 7)) => #t
+            (equal? 3 3.0) => #f                # poznamka 3 je cely cislo a 3.0 neni (asi neco jako int a float, idk)
+    
+    eq? - skoro stejny jako equal?, ale koukaji se na misto pameti, neco jako pointer 
+        pr: (define seznam1 '(1 2 3))
+            (define seznam2 '(1 2 3))
+
+            (equal? seznam1 seznam2) ; -> #t        #(Vypadají stejně, mají stejná čísla)
+            (eq? seznam1 seznam2)    ; -> #f        #(Jsou to dvě různé krabičky na dvou různých místech v paměti)
+
+            (define seznam3 seznam1) ;              #Tady říkám: seznam3 ukazuje na tu SAMOU krabičku jako seznam1
+            (eq? seznam1 seznam3)    ; -> #t        #(Ano, tohle je fyzicky ten samý objekt) 
+
+            (eq? 'jablko 'jablko) ; -> #t
+    
+    = - skoro stejny jako equal?, ale na cisla
+        pr: (= 1 1) -> #t 
+
+    -   eq? - na symboly
+        =   - na cisla
+        equal? - vse ostatni (string, senzam,...)
+
