@@ -16,6 +16,8 @@ pair functions:
 
 list functions:
     - list se ze zacatku znaci apostrofem
+    - list je proste rekurzivni cons
+        '(1 2 3) == (cons 1 (cons 2 (cons 3 '())))
 
     list - proste z toho udela list (LMAO :3)
         pr: (list 1 2 3 4) => '(1 2 3 4)
