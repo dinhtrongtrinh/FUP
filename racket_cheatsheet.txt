@@ -54,10 +54,63 @@ Equality functions:
 
             (eq? 'jablko 'jablko) ; -> #t
     
-    = - skoro stejny jako equal?, ale na cisla
+    (=) - skoro stejny jako equal?, ale na cisla
         pr: (= 1 1) -> #t 
 
-    -   eq? - na symboly
+    ---  eq? - na symboly
         =   - na cisla
         equal? - vse ostatni (string, senzam,...)
 
+Lambda abstraction:
+    - lambda funkce je anonymni, vraci hodnotu a nema proste jmeno
+
+    strktura:
+        (lambda (arg1 ... argN) exp)        #arg1 - argN jsou argumenty a exp je telo funkce
+        pr: (lambda (x) (* x x))
+            ( (lambda (x) (* x x)) 5 )  => 25
+
+
+###################################################################
+
+        Higher-order Functions 
+
+###################################################################
+
+Definition:
+    A function taking other functions as arguments or returning a 
+    function or both is called a higher-order function.
+
+cesky:
+    Fuknce, ktera bere jako parametr funkci nebo vraci funkci ci oboji je vyssi funkce XD
+
+
+iterating list functions:
+    - iteruje cely list a vraci bud neco (nemusime jako picusove rekurzovat list)
+
+    apply - vezme funkce (nejlepe nejaky znameko +,-,*,/) a list.
+            Ziteruje to cely list a vrati jedine cislo 
+            Neco jako:
+                sum = 0
+                for x in list:
+                    sum += x
+
+        pr: (apply + '(1 2 3 4 5)) => 15
+            
+            (define (vzdalenost-3d x y z)
+                (sqrt (+ (expt x 2) 
+                        (expt y 2) 
+                        (expt z 2))))
+
+            (define muj-bod '(1 2 3))
+
+            (apply vzdalenost-3d muj-bod) => 14 
+    
+    filter - vezme funkci a list. Iteruje kazdy prvek a porovna s boolenskou funkci.
+            Neco jako:
+            for x in list:
+                if x != 0:
+                    remove_from_list(x)
+
+        pr: (filter positive? '(1 -2 3 4 -5)) => '(1 3 4)
+
+            
