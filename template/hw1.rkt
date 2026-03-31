@@ -33,7 +33,9 @@
 (define (list-split lst widht [answer '()])
   (if (empty? lst)
     (reverse answer)
-    (list-split (drop lst widht) widht (cons (take lst widht) answer))))
+    (list-split (drop lst widht) widht (cons (take lst widht) answer))
+    )
+)
 
 ;;; Takes an image and converts it into a list of lists of grayscale values.
 (define (img->mat image)

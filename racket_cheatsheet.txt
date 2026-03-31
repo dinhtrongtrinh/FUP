@@ -54,6 +54,15 @@ Equality functions:
 
             (eq? 'jablko 'jablko) ; -> #t
     
+    procedure? - bere jako argument funkci nebo konstantu a vraci false-konstanta, true-funkce
+        pr:
+            (define x 10)           ; konstanta (číslo)
+            (define (f y) (+ y 1))  ; funkce
+
+            (procedure? x) ; vrátí #f
+            (procedure? f) ; vrátí #t
+            (procedure? +) ; vrátí #t
+    
     (=) - skoro stejny jako equal?, ale na cisla
         pr: (= 1 1) -> #t 
 
