@@ -22,7 +22,7 @@
 )
 
 ; checkonavni env
-(define (check-f-or-c x)
+(define (check-function-or-constant x)
     (if (list? (cadr x)) 
     ;; ANO, druhý prvek je seznam, takže je to FUNKCE
     (let ([jmeno (car (cadr x))]
@@ -37,14 +37,36 @@
 )
 
 (define (build-global-env prg)
-    (map check-f-or-c prg)
+    (map check-function-or-constant prg)
 )
 
 (define (eval-expr expr env)
-    
-
+    (match expr
+        [(? number?) expr]
+        [(? symbol?) (lookup expr env)]
+        [(? list?)  
+            (cond
+                [(eq? (car expr) 'circle) 
+                    (make-circle (lookup (list-ref expr 1) env) (lookup (list-ref expr 2) env) (lookup (list-ref expr 3) env) (lookup (list-ref expr 4) env))    
+                ]
+                [(eq? (car expr) 'line) 
+                    (make-line (lookup (list-ref expr 1) env) (lookup (list-ref expr 2) env) (lookup (list-ref expr 3) env) (lookup (list-ref expr 4) env) (lookup (list-ref expr 5) env))    
+                ]
+                [(eq? (car expr) 'rect)
+                    (make-rect (lookup (list-ref expr 1) env) (lookup (list-ref expr 2) env) (lookup (list-ref expr 3) env) (lookup (list-ref expr 4) env) (lookup (list-ref expr 5) env))    
+                ]
+                [else
+                    ((car expr) (lookup (list-ref expr 1) env) (lookup (list-ref expr 2) env))
+                ]
+            )
+        ]
+    )
 )
 (define (execute width height prg expr)
 ""
 )
-(build-global-env '((define PI 3.14) (define (kruh x) (circle x x 10 STYLE))))
+(define test-env '((x . 100) (y . 50) (STYLE . "fill:blue")))
+(eval-expr 42 test-env)
+(eval-expr 'x test-env)
+(eval-expr '(circle x (- y 20) 30 STYLE) test-env)
+
