@@ -12,7 +12,7 @@ pair functions:
 
     cdr - vrati zbytky prvku seznamu
         pr: (define muj-seznam '(1 2 3))
-            (cdr muj-seznam) ; => 1(2 3)       #(Všechno ostatní kromě prvního prvku)
+            (cdr muj-seznam) ; => (2 3)       #(Všechno ostatní kromě prvního prvku)
 
 list functions:
     - list se ze zacatku znaci apostrofem
