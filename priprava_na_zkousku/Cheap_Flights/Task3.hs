@@ -1,51 +1,62 @@
-module Task3 (cheapflight, Node, Cost, Edge, Graph, Path) where
-import Data.List (sortBy)
+module CheapFlights (cheapflight,Node,Cost,Edge,Graph,Path) where
+import Data.List -- needed for sorting (see hints)
 
 type Node = Int
 type Cost = Float
-type Edge = (Node, Node, Cost) 
-type Graph = ([Node], [Edge]) 
+type Edge = (Node,Node,Cost) 
+type Graph = ([Node],[Edge]) 
 type Path = [Node]
 
--- 1. POMOCNÁ FUNKCE: Vyhledání sousedních hran pro daný uzel
-findNegh :: Node -> [Edge] -> [Edge]
-findNegh node edges = 
-    filter (\(node1, node2, cost) -> node1 == node || node2 == node) edges
+nodes :: [Node]
+nodes = [1..6]
 
--- 2. POMOCNÁ FUNKCE: Seřazení fronty podle ceny vzestupně
-seradFrontu :: [(Cost, Path)] -> [(Cost, Path)]
-seradFrontu unsortedList = 
-    sortBy (\(cost1, path1) (cost2, path2) -> compare cost1 cost2) unsortedList
+edges :: [Edge]
+edges = [(1,2,0.5), (1,3,1.0), (2,3,2.0), (2,5,1.0), (3,4,4.0), (4,5,1.0)]
 
--- 3. HLAVNÍ FUNKCE
-cheapflight :: Node -> Node -> Graph -> Maybe (Path, Cost)
-cheapflight a b (allNodes, allEdges) = search (listNaZacatku)
-  where
-    -- Výchozí stav fronty: cena 0, cesta obsahuje jen startovní uzel 'a'
-    listNaZacatku = [(0.0, [a])]
+graph :: Graph
+graph = (nodes,edges) 
 
-    -- Rekurzivní vyhledávací funkce
-    search :: [(Cost, Path)] -> Maybe (Path, Cost)
-    search [] = Nothing -- Konec: fronta je prázdná, cesta neexistuje
-    search ((aktualniCena, aktualniCesta):xs) =
-        let aktualniUzel = head aktualniCesta
-        in if aktualniUzel == b
-           then Just (reverse aktualniCesta, aktualniCena) -- Konec: našli jsme cíl!
-           else
-               -- 1. KROK: Najdeme sousedy a vytvoříme nové cesty (přes map)
-               let noveCesty = map (\(u1, u2, cenaHrany) -> 
-                                    let soused = if u1 == aktualniUzel then u2 else u1
-                                    in (aktualniCena + cenaHrany, soused : aktualniCesta)
-                                   ) (findNegh aktualniUzel allEdges)
-                   
-                   -- 2. KROK: Ochrana proti zacyklení (přes filter)
-                   platneCesty = filter (\(novaCena, novaCesta) -> 
-                                         let soused = head novaCesta
-                                         in not (soused `elem` aktualniCesta)
-                                        ) noveCesty
-                   
-                   -- 3. KROK: Spojení se zbytkem fronty 'xs' a seřazení
-                   novaFronta = seradFrontu (xs ++ platneCesty)
-               
-               -- 4. KROK: Skok do dalšího kola rekurze
-               in search novaFronta
+cheapEdge :: (Path,Cost) -> [Node] -> [Edge] -> [(Path,Cost)] -> [(Path,Cost)]
+cheapEdge _ _ [] acc = acc
+
+cheapEdge routeList@(path,cost) covered ((fst,snd,costEdge):xs) acc =
+    if fst == head path && snd `notElem` covered
+    then cheapEdge routeList covered xs ((snd : path ,cost+costEdge) : acc)
+    else 
+        if snd == head path && fst `notElem` covered
+        then cheapEdge routeList covered xs ((fst : path ,cost+costEdge) : acc)
+        else cheapEdge routeList covered xs acc
+
+
+lowcost (_,x) (_,y) | x < y = LT
+                    | otherwise = GT
+
+
+cheapflightCov :: [(Path,Cost)] -> Node -> Node -> Graph -> [Node] -> Maybe (Path,Cost)
+cheapflightCov queue start end gr@(_, edges) covered
+    | null queue = Nothing -- 1. Fronta je prázdná -> cesta neexistuje
+    | otherwise =
+        -- Nejdříve celou frontu seřadíme, abychom měli jistotu, že pracujeme s tím nejlevnějším
+        let sortedQueue = sortOn snd queue
+            (currPath, currCost) = head sortedQueue -- Vezmeme nejlevnější plán
+            restQueue = tail sortedQueue            -- Zbytek fronty
+            currAirport = head currPath             -- Kde zrovna jsme
+        in
+            -- 2. KONTROLA CÍLE
+            if currAirport == end
+            then Just (reverse currPath, currCost) -- Máme hotovo! Otočíme cestu do správného směru.
+            
+            -- 3. EXPANZE (Jedeme dál)
+            else
+                -- Vygenerujeme nové cesty. Jako covered předáme aktuální cestu, aby letadlo nelétalo v kruhu.
+                let newPaths = cheapEdge (currPath, currCost) currPath edges []
+                    -- Nové cesty spojíme se zbytkem fronty (operátor ++ je jako racketovský append)
+                    updatedQueue = newPaths ++ restQueue
+                in 
+                    -- Zavoláme rekurzi s novou frontou
+                    cheapflightCov updatedQueue start end gr covered
+
+
+
+cheapflight :: Node -> Node -> Graph -> Maybe (Path,Cost)
+cheapflight start end gr = cheapflightCov [([start],0.0)] start end gr []

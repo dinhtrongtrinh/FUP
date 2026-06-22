@@ -21,4 +21,15 @@
         (my-lenght (rest lst) (+ acc 1))    
     )
 )
-(my-lenght '(1 2 4234 4))
+(define (word alp n)
+  (cond [(equal? n 0) '()]
+         [(equal? n 1) (map list alp)]
+         [else (apply append
+                      (map (lambda (x)
+                             (map (lambda (a) (cons a x))alp))
+                           (word alp (- n 1))))]
+  )
+)
+(word '(#\a #\b) 3)
+
+

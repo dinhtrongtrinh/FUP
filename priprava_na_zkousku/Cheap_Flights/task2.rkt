@@ -1,58 +1,85 @@
 #lang racket
 
 (provide cheap-flight)
+; list of nodes
+(define ns '(1 2 3 4 5 6)) ; listofnodes
+; list of edges where each edge contains (start end cost)
+(define es '((1 2 0.5) (1 3 1.0) (2 3 2.0) (2 5 1.0) (3 4 4.0) (4 5 1.0)))
+; the graph; a list of nodes and edges
+(define gr (list ns es))
 
-; Pomocné funkce pro práci s grafem ze zadání
+; some convenience functions
 (define (nodes gr) (car gr))
 (define (edges gr) (cadr gr))
+(define (cost edge) (caddr edge))
 
-; Pomocná funkce pro vyhledání sousedních hran uzlu
-(define (get-neighbors start graf)
-  (filter 
-   (lambda (edge)
-     (or (equal? (car edge) start) 
-         (equal? (cadr edge) start)))
-   (edges graf)))
+(define (cheapEdge routeList covered edges [acc '()])
+  (if (empty? edges)
+      acc ;; Když dojdou hrany, vrátíme nashromážděné nové trasy
+      (let* ([currEdge (car edges)]
+             [v (car currEdge)]
+             [u (cadr currEdge)]
+             [cost (caddr currEdge)]
+             ;; Vytáhneme si z routeList aktuální stav: (cesta cena)
+             [current-path (car routeList)]
+             [current-cost (cadr routeList)]
+             ;; Aktuální letiště, kde se nacházíme, je na vrcholu cesty
+             [currAirport (car current-path)])
+        
+        (cond 
+          ;; Případ A: Hrana vede z našeho letiště (v) do nového (u)
+          [(and (equal? v currAirport) (not (member u covered)))
+           (let ([new-route (list (cons u current-path) (+ current-cost cost))])
+             (cheapEdge routeList covered (cdr edges) (cons new-route acc)))]
+          
+          ;; Případ B: Graf je neorientovaný, takže hrana může vést i z (u) do nového (v)
+          [(and (equal? u currAirport) (not (member v covered)))
+           (let ([new-route (list (cons v current-path) (+ current-cost cost))])
+             (cheapEdge routeList covered (cdr edges) (cons new-route acc)))]
+          
+          ;; Případ C: Hrana s naším letištěm nesouvisí nebo vede do už navštíveného místa
+          [else 
+           (cheapEdge routeList covered (cdr edges) acc)]))))
 
-; Hlavní funkce
-(define (cheap-flight a b gr)
-  
-  ; Predikát pro řazení fronty od nejlevnějšího po nejdražší
-  (define (cheaper? x y) (< (car x) (car y)))
+(define (cheaper? x y) 
+  (< (cadr x) (cadr y)))
+(define (cheaper-edge? x y)
+  (< (caddr x) (caddr y))
+  )
 
-  ; Rekurzivní vyhledávání s frontou
-  (define (search queue)
-    (cond
-      [(null? queue) #f] ; Fronta je prázdná = cíl neexistuje, vrátíme #f
+(define (cheap-flight start end gr)
+  (define (loop queue)
+    (cond 
+      ;; Pokud je fronta prázdná, cesta neexistuje
+      [(empty? queue) #f]
       [else
-       (let* ([current (car queue)]       
-              [cost (car current)]        
-              [path (cadr current)]       
-              [node (car path)])          
+       (let* ([sortQ (sort queue cheaper?)]
+              [firstQ (car sortQ)]         ; Globálně nejlevnější plán
+              [zbytekQ (cdr sortQ)]        ; Zbytek fronty
+              [currPath (car firstQ)]       ; Jeho cesta (zároveň slouží jako covered!)
+              [currCost (cadr firstQ)]      ; Jeho cena
+              [currAirport (car currPath)]) ; Kde to letadlo zrovna stojí
          
-         (if (equal? node b)
-             (list (reverse path) cost) ; JSME V CÍLI -> vracíme otočenou cestu a cenu
-             
-             ; NEJSME V CÍLI -> vygenerujeme nové cesty
-             (let* ([all-extensions 
-                    (map (lambda (e)
-                           (let* ([next-node (if (equal? (car e) node) (cadr e) (car e))]
-                                  [edge-cost (caddr e)]
-                                  [new-cost (+ cost edge-cost)]
-                                  [new-path (cons next-node path)])
-                             (list new-cost new-path)))
-                         (get-neighbors node gr))]
-                    
-                    ; OCHRANA PROTI ZACYKLENÍ: necháme jen ty cesty, kde 'next-node' ještě nebyl navštíven
-                    [valid-extensions
-                     (filter (lambda (elem)
-                               (let ([next-node (car (cadr elem))])
-                                 (not (member next-node path))))
-                             all-extensions)])
-               
-               ; Spojíme zbytek fronty s novými platnými cestami, seřadíme a jedeme dál
-               (search (sort (append (cdr queue) valid-extensions) cheaper?))
-               )))]))
+         (cond 
+           ;; KONTROLA CÍLE: Kontrolujeme to nejlepší z fronty!
+           [(equal? currAirport end) 
+            (list (reverse currPath) currCost)]
+           
+           ;; EXPANZE: Pokud nejsme v cíli, vygenerujeme nové plány a hodíme je do fronty
+           [else 
+            (let* ([grEdges (edges gr)]
+                   ;; Jako covered posíláme currPath (historii téhle cesty)
+                   [nove-cesty (cheapEdge firstQ currPath grEdges)])
+              ;; Všechny nové cesty spojíme se zbytkem fronty a jedeme další kolo
+              (loop (append nove-cesty zbytekQ)))]))]))
 
-  ; Nastartování algoritmu s první cestou o ceně 0
-  (search (list (list 0 (list a)))))
+  ;; Startovní zavolání: ve frontě je jedna cesta se startovním letištěm a cenou 0.0
+  (loop (list (list (list start) 0.0))))
+
+
+; with the graph defined above:
+> (cheap-flight 2 4 gr)
+'((2 1 3) 1.5)
+
+> (cheap-flight 2 2 gr)
+#f
